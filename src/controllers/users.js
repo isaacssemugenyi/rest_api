@@ -1,4 +1,5 @@
 const UserModel = require('../models/users')
+const jwt = require('jsonwebtoken')
 
 exports.UserController = {
     async getusers(req, res) {
@@ -16,6 +17,25 @@ exports.UserController = {
         } catch(err){
             // console.log(err)
             throw new Error("Failed to post users");
+        }
+    },
+
+    async login(req,res){
+        try {
+            const foundUser = await UserModel.findOne({email: req.body.email});
+            if(!foundUser) {
+                return res.status(404).json({message: 'No user found'});
+            } else {
+                if(foundUser.phone != req.body.phone){
+                    return res.status(404).json({message: 'Phone does not match'})
+                } else {
+                    return res.json({
+                        token: jwt.sign({firstName: foundUser.firstName, _id: foundUser.id}, process.env.SECRET_KEY)
+                    })
+                }
+            }
+        } catch (error) {
+            console.log(error);
         }
     },
     async updateUser(req, res) {

@@ -1,11 +1,25 @@
 const express = require('express')
 const mongoose = require('mongoose')
-const cors = require('cors');
+const jwt = require('jsonwebtoken')
+const cors = require('cors')
+require('dotenv').config()
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
+app.use((req, res, next) => {
+    if (req.headers && req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+        jwt.verify(req.headers.authorization.split(' ')[1], process.env.SECRET_KEY , (err, decode) => {
+            if (err) req.user = undefined;
+            req.user = decode;
+            next();
+        });
+    } else {
+        req.user = undefined;
+        next();
+    }
+});
 
 mongoose.connect('mongodb://127.0.0.1:27017/test', {
     useNewUrlParser: true,
